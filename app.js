@@ -1,4 +1,3 @@
-
 const botSettings = require("./botsettings.json")
 var Discord = require('discord.js');
 var bot = new Discord.Client({autoReconnect:true});
@@ -44,7 +43,7 @@ const reactionIdentGold = botSettings.reactionIdentGold //:three:
 const reactionIdentPlatinum = botSettings.reactionIdentPlatinum //:four:
 const reactionIdentDiamond = botSettings.reactionIdentDiamond //:five:
 const reactionIdentMaster = botSettings.reactionIdentMaster //:six:
-const validSkillRoleStrings = ['Master', 'Diamond', 'Platinum', 'Gold', 'Silver', 'Bronze', 'Master (pending verification)', 'Diamond (pending verification)', 'Platinum (pending verification)']
+const validSkillRoleStrings = ['Master', 'Diamond', 'Platinum', 'Gold', 'Silver', 'Bronze']
 const textChannelIDForSurveys = botSettings.textChannelIDForSurveys
 const skillSurveyMessageContent = '__**Skill Survey**__\n\nPlease estimate your own skill at the game.  I\'ve put together a scale from Bronze to Master.\n\nTo answer, just click a reaction button corresponding to the number next to the skill level you think most closely matches your current skill.\n\nPlease answer as accurately as possible.  We\'d appreciate it if you don\'t joke and rank yourself way higher or way lower than your actual approximate skill.\n\n:one: **Bronze**\n-Very little or no experience with the game\n-mostly goes for 4 combos if anything.\n-prefers difficulty level 1\n\n:two: **Silver**\n-understands how to lower the stack (get rid of towers and fill holes)\n-looks for 5-6 combos\n-sets up x2 chains (not so many skill chains)\n-comfortable on levels 2-4\n\n:three: **Gold**\n-comfortable on level 5\n-can do some skill chains, usually just in the nick of time.\n-great at chaining off of transforming garbage\n\n:four: **Platinum**\n-Comfortable on level 8.\n-good at recognizing patterns and building long skill chains.\n\n:five: **Diamond**\n-comfortable on level 10\n-strategizes on what kinds of garbage to send and when, and when to stop a chain.\n-sees chains many links ahead, and can quickly send exactly the garbage he wants.\n\n:six: **Master**\n-great at incorporating lots of medium-large combos while chaining, which produces very high garbage output.\n-often takes advantage of time lag chains, and can often work on two chains at once.\n-deep game sense, knowing when to do certain things that will give him/her an advantage, like always knowing just how much garbage is required to top out the opponent.'
 
@@ -263,7 +262,7 @@ class Matchmaker{
   log('Something went wrong with deleting the messages')
   })*/
   }
-  
+
   removeLookingMessages(member){
     // remove any other messages saying the member "is looking", perhaps sent by cordelia
     matchmakingTextChannel.fetchMessages().then(function(messageCollection){
@@ -290,7 +289,7 @@ class Matchmaker{
       log('Something went wrong with deleting the messages')
     })
   }
-  
+
   async addMatch(match){
     log('beginning of matchmaker addMatch method')
     matchmaker.removeLookingMessages(match.player1)
@@ -299,8 +298,8 @@ class Matchmaker{
     matchmaker.endMatch(match.player2);
     sleep(500).then(() => {
       this.matchSet.add(match);
-      /*if (!match.player1.roles.find(x => x.id === roleIDInGame)) */changeMatchmakingRole(match.player1, 'IN-GAME')
-      /*if (!match.player2.roles.find(x => x.id === roleIDInGame)) */changeMatchmakingRole(match.player2, 'IN-GAME')
+      /*if (!match.player1.roles.find(x => x.id === roleIDInGame)) */changeMatchmakingRole(match.player1, 'NETPLAY PLAYING')
+      /*if (!match.player2.roles.find(x => x.id === roleIDInGame)) */changeMatchmakingRole(match.player2, 'NETPLAY PLAYING')
       match.createVoiceChannel()
       match.createTextChannel()
       .then(() =>{
@@ -375,7 +374,7 @@ class Matchmaker{
               match.player2.removeRole(member.guild.roles.get(roleIDInGame))
             }
             else{
-              changeMatchmakingRole(match.player2, 'POTENTIALLY AVAILABLE')
+              changeMatchmakingRole(match.player2, 'NETPLAY AVAILABLE')
             }
           }
           if (match.player2 === member ){
@@ -384,7 +383,7 @@ class Matchmaker{
               match.player1.removeRole(member.guild.roles.get(roleIDInGame))
             }
             else{
-              changeMatchmakingRole(match.player1, 'POTENTIALLY AVAILABLE')
+              changeMatchmakingRole(match.player1, 'NETPLAY AVAILABLE')
             }
           }
           log(`matchAnnouncement to delete: ${match.matchAnnouncement.content}`)
@@ -401,8 +400,8 @@ class Matchmaker{
       }
     })
   }
-  
-  
+
+
   memberIsSeeking(member){
     let isSeeking = false
     this.matchSeekSet.forEach(matchSeek =>{
@@ -643,7 +642,7 @@ class Match{
                 log('Perhaps the room has already been closed? Here\'s the error:')
                 log(err)
               }
-              
+
             }else{
               log('Conditions not met for adding reactions to the announcement')
               //log(`this.locked: ${this.locked}`)
@@ -816,15 +815,15 @@ function changeMatchmakingRole(member, roleString) {
   //if the member is a bot, don't do anything
   if (member.bot) return;
   //do stuff depending on what matchmaking role roleString represents
-  if (roleString.toUpperCase() === 'LOOKING FOR OPPONENT') {
-    
+  if (roleString.toUpperCase() === 'NETPLAY LOOKING') {
+
     member.removeRoles([roleIDLookingForOpponent,roleIDPotentiallyAvailable,roleIDDoNotDisturb,roleIDNewMember,roleIDInactive]);//but don't remove "in-game" role, to allow looking while in-game
     // pause a moment for roles to be finished being removed
     sleep(500).then(() => {
       //assign '@looking for Opponent'
       var role = member.guild.roles.find(x => x.id === roleIDLookingForOpponent);
       member.addRole(role);
-      log('Added role \'@Looking for Opponent\' to member ' + member.user.username);
+      log('Added role \'@Netplay Looking\' to member ' + member.user.username);
 
       //send a message in the matchmaking channel alerting people that a user wants to play
       sleep(1).then(async function(){
@@ -861,14 +860,14 @@ function changeMatchmakingRole(member, roleString) {
 })
 return;
 }
-if (roleString.toUpperCase() === 'POTENTIALLY AVAILABLE') {
+if (roleString.toUpperCase() === 'NETPLAY AVAILABLE') {
   removeAllMatchmakingRoles(member);
   // pause a moment for roles to be finished being removed
   sleep(500).then(() => {
     //assign '@looking for Opponent'
     var role = member.guild.roles.find(x => x.id === roleIDPotentiallyAvailable);
     member.addRole(role);
-    log('Added role \'@Potentially available\' to member ' + member.user.username);
+    log('Added role \'@Netplay Available\' to member ' + member.user.username);
     //cancel any existing game seek
   })
   return;
@@ -885,7 +884,7 @@ if (roleString.toUpperCase() === 'DO NOT DISTURB') {
   })
   return;
 }
-if (roleString.toUpperCase() === 'IN-GAME') {
+if (roleString.toUpperCase() === 'NETPLAY PLAYING') {
   removeAllMatchmakingRoles(member);
   // pause a moment for roles to be finished being removed
   sleep(500).then(() => {
@@ -942,7 +941,7 @@ function changeSkillRole(member, roleString){
         log('Failed to send member a message, perhaps they have blocked DMs?')
         log(err)
       }
-      
+
       //report this event to the skill-verification channel
       try{
         skillVerificationTextChannel.send(`${member} is now ${roleString}.`)
@@ -972,16 +971,16 @@ bot.on('message', message => {
     if (msg.startsWith(prefix)){
 
       if (msg === prefix + 'LOOKING' || msg === prefix + 'LO') {
-        changeMatchmakingRole(message.member, 'Looking For Opponent')
+        changeMatchmakingRole(message.member, 'NETPLAY LOOKING')
       }
       else if (msg === prefix + 'LURKING' || msg === prefix + 'AVAILABLE' || msg === prefix + 'LU'){
-        changeMatchmakingRole(message.member, 'Potentially Available')
+        changeMatchmakingRole(message.member, 'NETPLAY AVAILABLE')
       }
       else if (msg === prefix +'DND'){
         changeMatchmakingRole(message.member, 'Do Not Disturb')
       }
       else if (msg === prefix +'INGAME' || msg === prefix + 'IG' || msg === prefix + 'IN-GAME'){
-        changeMatchmakingRole(message.member, 'IN-GAME')
+        changeMatchmakingRole(message.member, 'NETPLAY PLAYING')
       }
       else {
         let errorMessage = '\''+ message.content + '\' is an unrecognized command.\nCurrently, supported commands are the following, preceded by a \'' + prefix + '\'\nlooking, lo,\nlurking, lu,\ningame, ig,\ndnd '
@@ -1114,7 +1113,6 @@ bot.on('ready', () => {
       //for now, just add the appropriate reactions
       await messageForMatchmakingRoles.react(reactionIdentLookingForOpponent);
       await messageForMatchmakingRoles.react(reactionIdentPotentiallyAvailable);
-      await messageForMatchmakingRoles.react(reactionIdentInGame);
       await messageForMatchmakingRoles.react(reactionIdentDND);
       await messageForMatchmakingRoles.react(reactionIdentSpectator);
       //await messageForMatchmakingRoles.react(reactionIdentLogMatchSeeks);
@@ -1151,7 +1149,7 @@ bot.on('ready', () => {
       log('reactions added to the message for Skill Survey')
       //Run these only once, then comment them out
       //bot.channels.get(textChannelIDForMatchmaking).send(`Click a reaction to change your matchmaking status\n:white_check_mark: Looking for Opponent\n:bell: Potentially Available\n:no_entry: In-Game\n:no_bell: Do Not Disturb\n\nIf a player is already looking for an opponent, you can offer to play with them by clicking the :crossed_swords:\nThey can then accept by clicking :ok:\nNote: You can also add a custom message to your match request by sending a message in here.\n:lock: or :unlock: indicate whether a match's channels are locked.\nIf unlocked, you can click the :microphone2: to get access to the match's channels as a "spectator."\n:eyes: Toggles on/off pings for new spectatable matches. (@Spectators role)\n\nNeed help?  See <#${textChannelIDForWelcome}> or ask in <#${textChannelIDForSetupHelp}>`)
-      
+
       //bot.channels.get(textChannelIDForSurveys).send(skillSurveyMessageContent)
 
       //optional:
@@ -1439,42 +1437,38 @@ bot.on('messageReactionAdd', (messageReaction, user) => {
             matchOfControlPanelMessage.textChannel.send(`${memberThatReacted} left`)
             matchOfControlPanelMessage.removeMemberAsSpectator(memberThatReacted)
           }
-          changeMatchmakingRole(memberThatReacted, 'Looking For Opponent');
+          changeMatchmakingRole(memberThatReacted, 'Netplay Looking');
         }
         else if(emoji === reactionIdentPotentiallyAvailable){
           if (matchOfControlPanelMessage && matchOfControlPanelMessage.memberIsASpectatorInMatch(memberThatReacted)){
             matchOfControlPanelMessage.textChannel.send(`${memberThatReacted} left`)
             matchOfControlPanelMessage.removeMemberAsSpectator(memberThatReacted)
           }
-          changeMatchmakingRole(memberThatReacted, 'Potentially Available');
-        }
-        else if(emoji === reactionIdentInGame){
-          if (matchOfControlPanelMessage && matchOfControlPanelMessage.memberIsASpectatorInMatch(memberThatReacted)){
-            matchOfControlPanelMessage.textChannel.send(`${memberThatReacted} left`)
-            matchOfControlPanelMessage.removeMemberAsSpectator(memberThatReacted)
-          }
-          changeMatchmakingRole(memberThatReacted, 'IN-GAME');
+          changeMatchmakingRole(memberThatReacted, 'Netplay Available');
         }
         else if(emoji === reactionIdentDND){
           if (matchOfControlPanelMessage && matchOfControlPanelMessage.memberIsASpectatorInMatch(memberThatReacted)){
             matchOfControlPanelMessage.textChannel.send(`${memberThatReacted} left`)
             matchOfControlPanelMessage.removeMemberAsSpectator(memberThatReacted)
           }
+          var role = memberThatReacted.guild.roles.get(roleIDLookingForOpponent);
+          memberThatReacted.removeRole(role)
+          role = memberThatReacted.guild.roles.get(roleIDPotentiallyAvailable);
+          memberThatReacted.removeRole(role)
+          role = memberThatReacted.guild.roles.get(roleIDInGame);
+          memberThatReacted.removeRole(role)
           log(memberThatReacted.user.username + ' reacted Do Not Disturb')
-          changeMatchmakingRole(memberThatReacted, 'Do Not Disturb');
         }
         else if(emoji === reactionIdentSpectator){
           log(`${memberThatReacted.user.username} reacted with the spectator role emoji`)
           var role = memberThatReacted.guild.roles.get(roleIDSpectators);
           if(memberThatReacted.roles.has(roleIDSpectators)) {
             memberThatReacted.removeRole(role)
-            memberThatReacted.send("I've removed your @Spectators role")
           }
           else{
             memberThatReacted.addRole(role)
-            memberThatReacted.send("I've assigned you the @Spectators role")
           }
-          
+
         }
         else if(emoji === reactionIdentLogMatchSeeks){
           log('matchSeeks:')
@@ -1507,13 +1501,13 @@ bot.on('messageReactionAdd', (messageReaction, user) => {
           changeSkillRole(memberThatReacted, 'Gold')
           break;
           case reactionIdentPlatinum:
-          changeSkillRole(memberThatReacted, 'Platinum (pending verification)')
+          changeSkillRole(memberThatReacted, 'Platinum')
           break;
           case reactionIdentDiamond:
-          changeSkillRole(memberThatReacted, 'Diamond (pending verification)')
+          changeSkillRole(memberThatReacted, 'Diamond')
           break;
           case reactionIdentMaster:
-          changeSkillRole(memberThatReacted, 'Master (pending verification)')
+          changeSkillRole(memberThatReacted, 'Master')
           break;
           default:
           log(memberThatReacted.user.username + ' reacted to the Skill Survey with an invalid emoji')
@@ -1603,7 +1597,7 @@ bot.on('messageReactionAdd', (messageReaction, user) => {
 
   /* bot.on('messageReactionRemove', (messageReaction, user) => {
     messageReaction.message.guild.fetchMember(user).then(memberRemovingReaction => {
-      
+
     });
   }); */
 
