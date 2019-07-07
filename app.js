@@ -1603,5 +1603,5 @@ bot.on('messageReactionAdd', (messageReaction, user) => {
 
 
   if (true) {
-    bot.login(botSettings.token);
+    bot.login(process.env.token);
   }
